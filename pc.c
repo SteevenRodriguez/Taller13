@@ -4,6 +4,10 @@
 #include <pthread.h>
 void *producor(void*args);
 void *consumidor(void*args);
+pthread_mutex_t mutex;
+pthread_cond_t qnempty;
+pthread_cond_t qnfull;
+
 
 
 int cola = 0;
@@ -15,7 +19,7 @@ void *productor(void* args){
     while(items_total>producido){
          pthread_mutex_lock(&mutex);
          while(cola<size_cola-1){
-            pthread_con_wait(&qnfull,&mutex);           
+            pthread_cond_wait(&qnfull,&mutex);           
          }
          cola++;
          pthread_mutex_unlock(&mutex);
@@ -28,7 +32,7 @@ void *consumidor(void* args){
     while(items_total>producido || cola>0 ){
          pthread_mutex_lock(&mutex);
          while(cola<size_cola-1){
-            pthread_con_wait(&qnempty,&mutex);           
+            pthread_cond_wait(&qnempty,&mutex);           
          }
          cola--;
          pthread_mutex_unlock(&mutex);
@@ -38,14 +42,15 @@ void *consumidor(void* args){
 }
 
 int main(int argc, char** argv){
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t qnempty = PTHREAD_COND_INITIALIZER;
-pthread_cond_t qnfull = PTHREAD_COND_INITIALIZER;
 
  if( argc!=7 ){
     printf("Numero de argumentos incorrectos");
     return -1;
 }
+ pthread_mutex_init(&mutex, NULL);	
+  pthread_cond_init(&qnfull, NULL);		/* Initialize consumer condition variable */
+  pthread_cond_init(&qnempty, NULL);		/* Initialize producer condition variable */
+
 
 int num_prod=atoi(argv[1]);
 double tiempo_prod=atof(argv[2]);
