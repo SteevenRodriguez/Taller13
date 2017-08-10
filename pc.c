@@ -2,25 +2,41 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-int items_total=0;
-int size_cola=0;
 
-void* producer(void *ptr) {
-  int i;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t qnempty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t qnfull = PTHREAD_COND_INITIALIZER;
 
-  
-    pthread_mutex_lock(&the_mutex);	/* protect buffer */
-    while (buffer != 0)		       /* If there is something 
-					  in the buffer then wait */
-      pthread_cond_wait(&condp, &the_mutex);
-    buffer = i;
-    pthread_cond_signal(&condc);	/* wake up consumer */
-    pthread_mutex_unlock(&the_mutex);	/* release the buffer */
-  }
-  pthread_exit(0);
+int cola = 0;
+int producido = 0;
+int total = 0;
+int limite_cola = 0
 
+void *productor(void* args){
+    while(total>producido){
+         pthread_mutex_lock(&mutex);
+         while(cola<limite_cola-1){
+            pthread_con_wait(&qnfull,&mutex);           
+         }
+         cola++;
+         pthread_mutex_unlock(&mutex)
+         pthread_cond_signal(&qnempty);
+    }
 
+}
 
+void *consumidor(void* args){
+    while(total>producido){
+         pthread_mutex_lock(&mutex);
+         while(cola<limite_cola-1){
+            pthread_con_wait(&qnempty,&mutex);           
+         }
+         cola++;
+         pthread_mutex_unlock(&mutex)
+         pthread_cond_signal(&qnfull);
+    }
+
+}
 
 int main(int argc, char** argv){
 
