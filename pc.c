@@ -143,6 +143,6 @@ int main(int argc, char** argv){
 		pthread_join(id_cons[j], NULL);
 
 	}	
-	
+		
 	return 1;	
 }
