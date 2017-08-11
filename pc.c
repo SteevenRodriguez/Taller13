@@ -28,14 +28,21 @@ void *productor(void* args){
 		pthread_mutex_lock(&mutex);
 		
 		while(cola==size_cola){
-			pthread_cond_wait(&qnfull,&mutex);           
+			pthread_cond_wait(&qnfull,&mutex);  
+			if(items_total<=producido){
+				pthread_mutex_unlock(&mutex);
+				pthread_cond_broadcast(&qnfull);
+				pthread_cond_broadcast(&qnempty);
+				return 0;      
+			}   
 		}
 		if(items_total<=producido){
-			pthread_mutex_unlock(&mutex);
-			pthread_cond_broadcast(&qnfull);
-			pthread_cond_broadcast(&qnempty);
-			return 0;
-		}
+				pthread_mutex_unlock(&mutex);
+				pthread_cond_broadcast(&qnfull);
+				pthread_cond_broadcast(&qnempty);
+				return 0;      
+			}   
+		
 		usleep(tiempo_prod);
 		cola++;
 		producido++;
@@ -60,7 +67,13 @@ void *consumidor(void* args){
 		return 0;
 	}
          while(cola==0){
-            pthread_cond_wait(&qnempty,&mutex);           
+            pthread_cond_wait(&qnempty,&mutex);   
+		if(items_total<=producido && cola<=0 ){
+			pthread_mutex_unlock(&mutex);
+		 	pthread_cond_broadcast(&qnfull);
+			pthread_cond_broadcast(&qnempty);
+		return 0;
+		}
          }
 	
 	usleep(tiempo_cons);
@@ -130,6 +143,6 @@ int main(int argc, char** argv){
 		pthread_join(id_cons[j], NULL);
 
 	}	
-	printf("programa finalizado");
+	
 	return 1;	
 }
