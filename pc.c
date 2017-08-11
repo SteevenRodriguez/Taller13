@@ -12,56 +12,63 @@ pthread_cond_t qnfull;
 
 
 
-int cola = 0;
-int producido = 0;
-int items_total = 0;
-int size_cola =0;
+int cola;
+int producido;
+int items_total;
+int size_cola;
 int tiempo_cons;
 int tiempo_prod;
 
 void *productor(void* args){
-	printf("%d\n", producido);
-	printf("%d\n", items_total);
-	//int hilo = *((int *) args);
-	//printf("%d\n",hilo);
-	int stop = 0;
-	while(stop == 0){
-		printf("dentro del while");
+	
+	
+	
+	while(1){
+		
 		pthread_mutex_lock(&mutex);
-		while(cola<size_cola-1){
+		if(items_total<=producido){
+			pthread_mutex_unlock(&mutex);
+			pthread_cond_broadcast(&qnempty);
+			return 0;
+		}
+		while(cola==size_cola){
 			pthread_cond_wait(&qnfull,&mutex);           
+		}
+		
+		sleep(0.5);
+		cola++;
+		producido++;
+		printf("Productor  ha producido %d itemde %d, tamaño cola = %d\n" ,producido,items_total,cola );
+		
+		pthread_mutex_unlock(&mutex);
+		pthread_cond_broadcast(&qnempty);
 	}
-	usleep(tiempo_prod);
-	cola++;
-	printf("Productor  ha producido 1 item, tamaño cola = %d" ,cola );
-	if(items_total==producido){
-		stop = 1;
-	}
-	pthread_mutex_unlock(&mutex);
-	pthread_cond_signal(&qnempty);
-	}
-	return NULL;
+	return 0;
 
 }
 
 void *consumidor(void* args){
 	//int i = *((int *) args);
-	int stop = 0;
-    while(stop == 0){
+	
+    while(1){
          pthread_mutex_lock(&mutex);
-         while(cola<size_cola-1){
+	if(items_total<=producido && cola<=0 ){
+		pthread_mutex_unlock(&mutex);
+         	pthread_cond_broadcast(&qnfull);
+		return 0;
+	}
+         while(cola==0){
             pthread_cond_wait(&qnempty,&mutex);           
          }
-	usleep(tiempo_cons);
+	
+	sleep(0.75);
          cola--;
-	printf("Consumidor ha consumido 1 item, tamaño cola = %d", cola);
-	if(items_total==producido && cola==0 ){
-		stop = 1;
-	}
+	printf("Consumidor ha consumido 1 item, tamaño cola = %d\n", cola);
+	
          pthread_mutex_unlock(&mutex);
-         pthread_cond_signal(&qnfull);
+         pthread_cond_broadcast(&qnfull);
     }
-	return NULL;
+	return 0;
 
 }
 
@@ -82,9 +89,8 @@ int main(int argc, char** argv){
 	double tiempo_cons=atof(argv[4]);
 	size_cola=atoi(argv[5]);
 	items_total=atoi(argv[6]);
-
-
-
+	cola =0;
+	producido = 0;
 	printf("Numero de productores: %d\n", num_prod);
 	printf("Numero de consumidores: %d\n",num_cons);
 	printf("Tamaño de la cola: %d\n", size_cola);
@@ -94,11 +100,11 @@ int main(int argc, char** argv){
 	printf("Tiempo de produccion: %0.2f\n",tiempo_prod);
 
 	printf("Total de ítems a producir: %d\n",items_total);
-
+	
 	int h,j;
 	pthread_t id_prod[num_prod];
 	pthread_t id_cons[num_cons];
-
+	
 	for(h=0;h<num_prod;h++){
 		//int* arg = (int *)malloc(sizeof(int));
 		//*arg = h;
@@ -122,6 +128,6 @@ int main(int argc, char** argv){
 		pthread_join(id_cons[j], NULL);
 
 	}	
-
+	printf("programa finalizado");
 	return 1;	
 }
