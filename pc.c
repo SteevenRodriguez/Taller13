@@ -20,25 +20,25 @@ int tiempo_cons;
 int tiempo_prod;
 
 void *productor(void* args){
-	
+	int n_prd = *((int *) args);
 	
 	
 	while(1){
 		
 		pthread_mutex_lock(&mutex);
+		
+		while(cola==size_cola){
+			pthread_cond_wait(&qnfull,&mutex);           
+		}
 		if(items_total<=producido){
 			pthread_mutex_unlock(&mutex);
 			pthread_cond_broadcast(&qnempty);
 			return 0;
 		}
-		while(cola==size_cola){
-			pthread_cond_wait(&qnfull,&mutex);           
-		}
-		
 		sleep(0.5);
 		cola++;
 		producido++;
-		printf("Productor  ha producido %d itemde %d, tamaño cola = %d\n" ,producido,items_total,cola );
+		printf("Productor %d  ha producido %d itemde %d, tamaño cola = %d\n" ,n_prd,producido,items_total,cola );
 		
 		pthread_mutex_unlock(&mutex);
 		pthread_cond_broadcast(&qnempty);
@@ -48,13 +48,14 @@ void *productor(void* args){
 }
 
 void *consumidor(void* args){
-	//int i = *((int *) args);
+	int n_cons = *((int *) args);
 	
     while(1){
          pthread_mutex_lock(&mutex);
 	if(items_total<=producido && cola<=0 ){
 		pthread_mutex_unlock(&mutex);
          	pthread_cond_broadcast(&qnfull);
+		pthread_cond_broadcast(&qnempty);
 		return 0;
 	}
          while(cola==0){
@@ -63,7 +64,7 @@ void *consumidor(void* args){
 	
 	sleep(0.75);
          cola--;
-	printf("Consumidor ha consumido 1 item, tamaño cola = %d\n", cola);
+	printf("Consumidor %d ha consumido 1 item, tamaño cola = %d\n",n_cons, cola);
 	
          pthread_mutex_unlock(&mutex);
          pthread_cond_broadcast(&qnfull);
@@ -106,16 +107,16 @@ int main(int argc, char** argv){
 	pthread_t id_cons[num_cons];
 	
 	for(h=0;h<num_prod;h++){
-		//int* arg = (int *)malloc(sizeof(int));
-		//*arg = h;
-		pthread_create(&id_prod[h],NULL,productor,NULL);
+		int* arg = (int *)malloc(sizeof(int));
+		*arg = h+1;
+		pthread_create(&id_prod[h],NULL,productor,arg);
 
 	}
-	for(j=0;j<num_cons;j++){
-		//int* arg2 = (int *)malloc(sizeof(int));
-		//*arg2 = j;
+	for(j=0;j<=num_cons;j++){
+		int* arg2 = (int *)malloc(sizeof(int));
+		*arg2 = j+1;
 		//printf("%d\n",*arg2);
-		pthread_create(&id_cons[j],NULL,consumidor,NULL);
+		pthread_create(&id_cons[j],NULL,consumidor,arg2);
 
 	}
 
