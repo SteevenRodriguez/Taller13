@@ -29,12 +29,7 @@ void *productor(void* args){
 		
 		while(cola==size_cola){
 			pthread_cond_wait(&qnfull,&mutex);  
-			if(items_total<=producido){
-				pthread_mutex_unlock(&mutex);
-				pthread_cond_broadcast(&qnfull);
-				pthread_cond_broadcast(&qnempty);
-				return 0;      
-			}   
+			
 		}
 		if(items_total<=producido){
 				pthread_mutex_unlock(&mutex);
@@ -46,7 +41,7 @@ void *productor(void* args){
 		usleep(tiempo_prod);
 		cola++;
 		producido++;
-		printf("Productor %d  ha producido %d itemde %d, tamaño cola = %d\n" ,n_prd,producido,items_total,cola );
+		printf("Productor %d  ha producido 1 item, tamaño cola = %d\n" ,n_prd,cola );
 		
 		pthread_mutex_unlock(&mutex);
 		pthread_cond_broadcast(&qnempty);
